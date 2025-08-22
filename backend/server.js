@@ -4,6 +4,9 @@ import cors from "cors";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import authRouter from "./routes/auth.js";
+import "./models/User.js";
+import kidsRouter from "./routes/kids.js";
+
 
 
 dotenv.config(); // 1) Load backend/.env
@@ -18,6 +21,9 @@ app.use(express.json());
 app.use(morgan("dev")); // handy request logs during dev
 
 app.use("/auth", authRouter);
+
+app.use("/kids", kidsRouter);
+
 
 // 3) Mongo connect (with clear logs)
 mongoose
