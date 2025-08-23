@@ -4,6 +4,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Kids from "./pages/Kids";
+import Items from "./pages/Items";
+import Nav from "./components/Nav";
+
 
 const Protected = ({ children }) => {
   const token = useAuth((s) => s.token);
@@ -13,12 +16,16 @@ const Protected = ({ children }) => {
 const App = () => {
   return (
     <BrowserRouter>
+      <Nav />   {/* 👈 always visible */}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Protected><Dashboard /></Protected>} />
         <Route path="*" element={<Navigate to="/" />} />
-        <Route path="/kids" element={<Protected><Kids/></Protected>} />
+        <Route path="/kids" element={<Protected><Kids /></Protected>} />
+        <Route path="/items" element={<Protected><Items /></Protected>} />
+        <Route path="*" element={<Navigate to="/" />} />
+
       </Routes>
     </BrowserRouter>
   );

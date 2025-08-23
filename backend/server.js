@@ -6,13 +6,14 @@ import morgan from "morgan";
 import authRouter from "./routes/auth.js";
 import "./models/User.js";
 import kidsRouter from "./routes/kids.js";
+import itemsRouter from "./routes/items.js";
 
 
 
 dotenv.config(); // 1) Load backend/.env
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost/final-project";
 
 // 2) Middleware
@@ -23,6 +24,9 @@ app.use(morgan("dev")); // handy request logs during dev
 app.use("/auth", authRouter);
 
 app.use("/kids", kidsRouter);
+
+app.use("/items", itemsRouter);
+
 
 
 // 3) Mongo connect (with clear logs)
