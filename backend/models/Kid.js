@@ -6,4 +6,4 @@ const kidSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
 });
 
-export const Kid = mongoose.model("Kid", kidSchema);
+export default mongoose.model("Kid", kidSchema);

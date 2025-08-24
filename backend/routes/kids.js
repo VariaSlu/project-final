@@ -1,21 +1,28 @@
 import express from "express";
+import auth from "../middlewares/auth.js";
 import Kid from "../models/Kid.js";
-import auth from "../middlewares/auth.js"; // your JWT middleware
 
 const router = express.Router();
 
-// GET all kids for logged in user
 router.get("/", auth, async (req, res) => {
-  const kids = await Kid.find({ owner: req.user._id });
-  res.json(kids);
+  try {
+    const kids = await Kid.find({ owner: req.user.id }).lean();
+    res.json(kids);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch kids" });
+  }
 });
 
-// POST new kid
 router.post("/", auth, async (req, res) => {
-  const { name, birthdate } = req.body;
-  const kid = new Kid({ name, birthdate, owner: req.user._id });
-  await kid.save();
-  res.status(201).json(kid);
+  try {
+    const { name, birthdate } = req.body;
+    const kid = await Kid.create({ name, birthdate, owner: req.user.id });
+    res.status(201).json(kid);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to create kid" });
+  }
 });
 
 export default router;

@@ -8,6 +8,7 @@ const Kids = () => {
 
   useEffect(() => {
     api("/kids").then(setKids).catch(console.error);
+    console.log("VITE_API_URL", import.meta.env.VITE_API_URL);
   }, []);
 
   const addKid = async (e) => {

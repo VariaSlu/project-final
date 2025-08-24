@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.js";
 import "./models/User.js";
 import kidsRouter from "./routes/kids.js";
 import itemsRouter from "./routes/items.js";
+import auth from "./middlewares/auth.js";
 
 
 
@@ -49,6 +50,8 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({ ok: true, db: dbStatus() });
 });
+
+app.get("/me", auth, (req, res) => res.json({ userId: req.user.id }));
 
 // 5) Start the server
 app.listen(PORT, () => {
