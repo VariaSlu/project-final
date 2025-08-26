@@ -5,6 +5,17 @@ import { predictSizes } from "../lib/predict";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "../store/auth";
 
+// 🔹 helper: map height (cm) → EU kids clothing size (~height, rounded to standard steps)
+const heightToSize = (h) => {
+  if (!h) return null;
+  const steps = [50, 56, 62, 68, 74, 80, 86, 92, 98, 104, 110, 116, 122, 128, 134, 140, 146, 152, 158];
+  let closest = steps[0];
+  for (const s of steps) {
+    if (Math.abs(s - h) < Math.abs(closest - h)) closest = s;
+  }
+  return closest;
+};
+
 const Dashboard = () => {
   const logout = useAuth((s) => s.logout);
   const [kids, setKids] = useState([]);
@@ -16,15 +27,21 @@ const Dashboard = () => {
 
   const kid = useMemo(() => {
     if (!kids.length) return null;
-    // prefer persisted selection if present
     const k = kids.find((x) => x._id === kidId) || kids[0];
     if (!kidId && k) setKidId(k._id);
     return k;
   }, [kids, kidId, setKidId]);
 
-  // TODO: later store real per-kid current size; for demo use a safe default
-  const currentSize = 104;
-  const chartData = useMemo(() => (kid ? predictSizes({ currentSize, birthdate: kid.birthdate }) : []), [kid]);
+  // 🔹 use kid.height if available → convert to clothing size; fallback to 104
+  const baseSize = useMemo(() => {
+    const fromHeight = heightToSize(kid?.height);
+    return fromHeight ?? 104;
+  }, [kid?.height]);
+
+  const chartData = useMemo(
+    () => (kid ? predictSizes({ currentSize: baseSize, birthdate: kid.birthdate }) : []),
+    [kid, baseSize]
+  );
 
   const upcoming = useMemo(() => {
     if (!kid) return [];
@@ -73,7 +90,8 @@ const Dashboard = () => {
           )}
         </div>
         <p style={{ fontSize: 12, marginTop: 6 }}>
-          Current size assumed {currentSize}. This is a simple demo prediction to meet MVP requirements.
+          Base size: <b>{baseSize}</b>{kid?.height ? ` (from ${kid.height} cm height)` : " (default)"}.
+          Prediction uses a simple rule: &lt;3y ≈ +1 size every 8 months, otherwise +1/year.
         </p>
       </section>
 
