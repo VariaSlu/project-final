@@ -4,17 +4,38 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import { predictSizes } from "../lib/predict";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "../store/auth";
+import { predictionSeries, heightToSize, monthsSince } from "../lib/growth";
 
-// 🔹 helper: map height (cm) → EU kids clothing size (~height, rounded to standard steps)
-const heightToSize = (h) => {
-  if (!h) return null;
-  const steps = [50, 56, 62, 68, 74, 80, 86, 92, 98, 104, 110, 116, 122, 128, 134, 140, 146, 152, 158];
-  let closest = steps[0];
-  for (const s of steps) {
-    if (Math.abs(s - h) < Math.abs(closest - h)) closest = s;
+
+// WHO-ish median height checkpoints (unisex-ish, good enough for MVP)
+const AGE_HEIGHT_POINTS = [
+  { m: 0, h: 50 },
+  { m: 3, h: 61 },
+  { m: 6, h: 67 },
+  { m: 9, h: 72 },
+  { m: 12, h: 76 },
+  { m: 18, h: 82 },
+  { m: 24, h: 88 },
+  { m: 36, h: 96 },
+  { m: 48, h: 103 },
+  { m: 60, h: 110 }
+];
+
+// linear interpolation between points
+const estimateHeightFromAgeMonths = (months) => {
+  const pts = AGE_HEIGHT_POINTS;
+  if (months <= pts[0].m) return pts[0].h;
+  if (months >= pts[pts.length - 1].m) return pts[pts.length - 1].h;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (months >= a.m && months <= b.m) {
+      const t = (months - a.m) / (b.m - a.m);
+      return a.h + t * (b.h - a.h);
+    }
   }
-  return closest;
+  return 104; // fallback
 };
+
 
 const Dashboard = () => {
   const logout = useAuth((s) => s.logout);
@@ -34,14 +55,33 @@ const Dashboard = () => {
 
   // 🔹 use kid.height if available → convert to clothing size; fallback to 104
   const baseSize = useMemo(() => {
+    // 1) prefer explicit height
     const fromHeight = heightToSize(kid?.height);
-    return fromHeight ?? 104;
-  }, [kid?.height]);
+    if (fromHeight) return fromHeight;
 
-  const chartData = useMemo(
-    () => (kid ? predictSizes({ currentSize: baseSize, birthdate: kid.birthdate }) : []),
-    [kid, baseSize]
-  );
+    // 2) otherwise estimate from age → height → size
+    if (kid?.birthdate) {
+      const m = monthsSince(kid.birthdate);
+      const estH = estimateHeightFromAgeMonths(m);
+      const fromAge = heightToSize(estH);
+      if (fromAge) return fromAge;
+    }
+
+    // 3) fallback
+    return 104;
+  }, [kid?.height, kid?.birthdate]);
+
+
+  const chartData = useMemo(() => {
+    if (!kid) return [];
+    const currentHeight = kid.height ? Number(kid.height) : undefined;
+    return predictionSeries({ birthdate: kid.birthdate, currentHeight });
+  }, [kid]);
+
+  // (optional) nicer footnote explaining source of base size:
+  const baseNote = kid?.height
+    ? `from measured ${kid.height} cm`
+    : `estimated from age ${monthsSince(kid?.birthdate)} mo ≈ ${chartData[0]?.height} cm`;
 
   const upcoming = useMemo(() => {
     if (!kid) return [];
