@@ -15,16 +15,20 @@ const Login = () => {
   };
 
   return (
-    <main className="p-4 max-w-sm mx-auto">
+    // ...
+    <main>
       <h1>Login</h1>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <label>Email</label>
-        <input {...register("email", { required: true })} type="email" />
-        <label>Password</label>
-        <input {...register("password", { required: true, minLength: 6 })} type="password" />
+      <form onSubmit={handleSubmit(onSubmit)} aria-label="Login form">
+        <div>
+          <label htmlFor="login-email">Email</label>
+          <input id="login-email" {...register("email", { required: true })} type="email" autoComplete="email" />
+        </div>
+        <div>
+          <label htmlFor="login-password">Password</label>
+          <input id="login-password" {...register("password", { required: true, minLength: 6 })} type="password" autoComplete="current-password" />
+        </div>
         <button type="submit">Sign in</button>
       </form>
-      <p className="mt-2">No account? <Link to="/register">Register</Link></p>
     </main>
   );
 };

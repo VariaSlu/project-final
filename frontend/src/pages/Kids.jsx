@@ -26,17 +26,23 @@ const Kids = () => {
   return (
     <main className="p-4 max-w-sm mx-auto">
       <h1>Kids</h1>
-      <form onSubmit={addKid}>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
-        <input value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date" required />
-        <input
-          type="number"
-          value={height}
-          onChange={(e) => setHeight(e.target.value)}
-          placeholder="Height (cm)"
-          min="40"
-          max="200"
-        />
+      <form onSubmit={addKid} aria-label="Add kid form">
+        <div>
+          <label htmlFor="kid-name">Name</label>
+          <input id="kid-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
+        </div>
+
+        <div className="row">
+          <div>
+            <label htmlFor="kid-birthdate">Birthdate</label>
+            <input id="kid-birthdate" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
+          </div>
+          <div>
+            <label htmlFor="kid-height">Height (cm)</label>
+            <input id="kid-height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="e.g., 98" min="40" max="200" />
+          </div>
+        </div>
+
         <button type="submit">Add Kid</button>
       </form>
 

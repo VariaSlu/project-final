@@ -1,0 +1,92 @@
+/* Base */
+:root {
+  --gap: 12px;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #fafafa;
+  color: #111;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Forms */
+form {
+  display: grid;
+  gap: var(--gap);
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  background: #fff;
+}
+
+button {
+  border: none;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.95;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+/* Mobile first spacing */
+section {
+  margin-top: 16px;
+}
+
+/* Focus visible for keyboard a11y */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  /* accessible blue */
+  outline-offset: 2px;
+}
+
+/* Responsive helper */
+@media (min-width: 768px) {
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap);
+  }
+}

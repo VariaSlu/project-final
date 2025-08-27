@@ -82,7 +82,7 @@ const Dashboard = () => {
                 <XAxis dataKey="label" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Line type="monotone" dataKey="size" dot />
+                <Line type="monotone" dataKey="size" dot strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -95,17 +95,7 @@ const Dashboard = () => {
         </p>
       </section>
 
-      <section style={{ marginTop: 16 }}>
-        <h2 style={{ margin: 0, marginBottom: 8 }}>Upcoming needs</h2>
-        <ul>
-          {upcoming.length === 0 && <li>No items marked “needed” for {kid?.name || "this kid"}.</li>}
-          {upcoming.map((i) => (
-            <li key={i._id}>
-              {i.type} — size {i.size} — {i.season}
-            </li>
-          ))}
-        </ul>
-      </section>
+
     </main>
   );
 };
