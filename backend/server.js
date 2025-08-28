@@ -16,9 +16,12 @@ dotenv.config(); // 1) Load backend/.env
 const app = express();
 const PORT = process.env.PORT || 8081;
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost/final-project";
+//local dev site and hosted frontend
+const allowed = [process.env.FRONTEND_URL, "http://localhost:5173"].filter(Boolean);
+app.use(cors({ origin: allowed }));
 
 // 2) Middleware
-app.use(cors());
+//app.use(cors());
 app.use(express.json());
 app.use(morgan("dev")); // handy request logs during dev
 

@@ -1,11 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { predictSizes } from "../lib/predict";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "../store/auth";
 import { predictionSeries, heightToSize, monthsSince } from "../lib/growth";
 
+// helpers (top of file)
+const seasonOrder = ["winter", "spring", "summer", "autumn", "all"];
+const nextSeason = (now = new Date()) => {
+  const m = now.getMonth();
+  if (m === 11 || m <= 1) return "spring"; // Dec–Feb -> spring next
+  if (m >= 2 && m <= 4) return "summer";   // Mar–May -> summer
+  if (m >= 5 && m <= 7) return "autumn";   // Jun–Aug -> autumn
+  return "winter";                          // Sep–Nov -> winter
+};
+const needByDate = (season, now = new Date()) => {
+  const targetMonth = { winter: 10, spring: 2, summer: 5, autumn: 8 }[season]; // Nov/Mar/Jun/Sep 1st
+  if (targetMonth == null) return null;
+  const y = now.getMonth() <= targetMonth ? now.getFullYear() : now.getFullYear() + 1;
+  return new Date(y, targetMonth, 1);
+};
 
 // WHO-ish median height checkpoints (unisex-ish, good enough for MVP)
 const AGE_HEIGHT_POINTS = [
@@ -90,6 +104,28 @@ const Dashboard = () => {
       .slice(0, 6);
   }, [items, kid]);
 
+  // Needed items list (from real data)
+  const buyNext = useMemo(() => {
+    if (!kid) return [];
+    return items
+      .filter(i => i.status === "needed" && i.childId === kid._id)
+      .map(i => ({ ...i, needBy: needByDate(i.season) }))
+      .sort((a, b) => (a.needBy?.getTime() || Infinity) - (b.needBy?.getTime() || Infinity))
+      .slice(0, 5); // keep it short on dashboard
+  }, [items, kid]);
+
+  // Super-simple predictions: suggest core pieces for NEXT season, +1 size
+  const preds = useMemo(() => {
+    if (!kid) return [];
+    const ns = nextSeason();
+    const sz = (parseInt(baseSize, 10) || 104) + 1; // naive bump for next season
+    // pick 2–3 common seasonals; adjust per season if you want
+    const core = ns === "winter" ? ["jacket", "boots"] :
+      ns === "summer" ? ["hat", "top"] :
+        ns === "spring" ? ["jacket", "pants"] : ["jacket", "pants"];
+    return core.map(type => ({ type, size: sz, season: ns, needBy: needByDate(ns) }));
+  }, [kid, baseSize]);
+
   return (
     <main className="p-4 max-w-sm mx-auto">
       <header style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -135,6 +171,46 @@ const Dashboard = () => {
         </p>
       </section>
 
+      <section style={{ marginTop: 16 }}>
+        <h2 style={{ margin: 0, marginBottom: 8 }}>Buy next</h2>
+        <div className="card" aria-live="polite">
+          {buyNext.length ? (
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {buyNext.map(n => (
+                <li key={n._id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ flex: 1 }}>{n.type} · size {n.size} · <b>{n.season}</b></span>
+                  <small>{n.needBy ? `need by ${n.needBy.toLocaleDateString()}` : ""}</small>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const updated = await api(`/items/${n._id}`, { method: "PATCH", body: JSON.stringify({ status: "current" }) });
+                      // optimistic update
+                      setItems(prev => prev.map(x => x._id === n._id ? updated : x));
+                    }}
+                    style={{ width: "auto", padding: "6px 10px" }}
+                  >
+                    Mark bought
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : <p style={{ margin: 0 }}>Nothing urgent 🎉</p>}
+        </div>
+      </section>
+
+      <section style={{ marginTop: 12 }}>
+        <h2 style={{ margin: 0, marginBottom: 8 }}>Predicted next season</h2>
+        <div className="card">
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {preds.map((p, i) => (
+              <li key={i}>
+                {p.type} · size {p.size} · <b>{p.season}</b> {p.needBy ? `· by ${p.needBy.toLocaleDateString()}` : ""}
+              </li>
+            ))}
+          </ul>
+          <small style={{ color: "#555" }}>Tip: predictions are rough; adjust after measuring next month.</small>
+        </div>
+      </section>
 
     </main>
   );
